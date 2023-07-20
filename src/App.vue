@@ -32,8 +32,9 @@ import {
   GameWord,
 } from './components';
 import { GameStatus } from './types/Game';
+import useGetRandomWord from './composables/useGetWord';
 
-const word = ref<string>('chelovek');
+const { word, getRandomWord } = useGetRandomWord();
 const letters = ref<string[]>([]);
 const letterStatus = ref<InstanceType<typeof GameLetterStatus> | null>(null);
 const gameStatus = ref<GameStatus | null>(null);
@@ -47,16 +48,6 @@ const incorrectLetters = computed(() => {
   return letters.value.filter((l) => !word.value.includes(l));
 });
 
-const getRandomWord = async () => {
-  try {
-    const data = await fetch('https://random-word-api.herokuapp.com/word');
-    const res = await data.json();
-    word.value = res[0];
-  } catch (err) {
-    alert((err as Error).message);
-  }
-};
-
 const playAgain = () => {
   getRandomWord();
   isPlaying.value = true;
@@ -64,17 +55,16 @@ const playAgain = () => {
   letters.value = [];
 };
 
-onMounted(getRandomWord);
+const showLetterStatus = () => {
+  letterStatus.value?.toggleShow();
+
+  setTimeout(() => letterStatus.value?.toggleShow(), 2000);
+};
 
 document.addEventListener('keydown', ({ key }) => {
   if (!isPlaying.value) return;
 
-  if (letters.value.includes(key)) {
-    letterStatus.value?.toggleShow();
-
-    setTimeout(() => letterStatus.value?.toggleShow(), 2000);
-    return;
-  }
+  if (letters.value.includes(key)) return showLetterStatus();
 
   if (/^[A-Za-z]$/.test(key)) letters.value.push(key.toLowerCase());
 });
